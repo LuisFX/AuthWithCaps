@@ -8,7 +8,6 @@ open Elmish
 open Auth
 open Shared.Types
 open Shared.Capabilities
-open BusinessLayer
 open Shared
 open Fable
 open Fable.Remoting.Client
@@ -30,7 +29,7 @@ let capabilityApi =
 let todosApi =
     Remoting.createApi ()
     |> Remoting.withRouteBuilder Route.builder
-    |> Remoting.buildProxy<Capabilities.ICapabilityClientProvider>
+    |> Remoting.buildProxy<Capabilities.IApiCapabilityProvider>
 
 type CurrentState = 
     | LoggedOut
@@ -46,9 +45,12 @@ let update msg state =
     | Logout ->
         LoggedOut, Cmd.none
     | GetTodos u ->
-        let cmd = Cmd.OfAsync.perform todosApi.getTodos u GotTodos
-        // let cmd = Cmd.OfAsync.perform capabilityApi.getTodos user (fun x -> GotTodos x)
+        let cmd =
+            match ClientCapability.Capabilities.allCapabilities.getTodos u with
+            | Some cap -> Cmd.OfAsync.perform todosApi.getTodos u GotTodos
+            | None -> Cmd.none 
         state, cmd
+
     | GotTodos l ->
         console.log ("Got todos:", l)
         state, Cmd.none
@@ -70,19 +72,19 @@ let update msg state =
                 // not found -- stay in originalState 
                 printfn ".. %A" err
                 state, Cmd.none
-    | GetCustomerDetails getCustomerCap ->
-            let r =
-                match getCustomerCap with
-                | Some cap ->
-                    Logic.getCustomer cap
-                | None ->
-                    failwith "Not authorized for this capability"
-            match r with
-            | Ok d -> 
-                GotCustomerDetails d, Cmd.none
-            | Error err -> 
-                printfn ".. %A" err
-                state, Cmd.none
+    // | GetCustomerDetails getCustomerCap ->
+    //         let r =
+    //             match getCustomerCap with
+    //             | Some cap ->
+    //                 Logic.getCustomer cap
+    //             | None ->
+    //                 failwith "Not authorized for this capability"
+    //         match r with
+    //         | Ok d -> 
+    //             GotCustomerDetails d, Cmd.none
+    //         | Error err -> 
+    //             printfn ".. %A" err
+    //             state, Cmd.none
             
 
 [<ReactComponent>]

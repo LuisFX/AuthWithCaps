@@ -12,7 +12,7 @@
         <Compile Include="Main.fs" />
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\BusinessLayer\BusinessLayer.fsproj" />
+        <ProjectReference Include="..\ClientCapability\ClientCapability.fsproj" />
         <ProjectReference Include="..\Shared\Shared.fsproj" />
         <ProjectReference Include="..\Auth\Auth.fsproj" />
     </ItemGroup>

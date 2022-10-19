@@ -104,7 +104,7 @@ module Capabilities =
                     |> Option.map (Authorization.auditable "UpdatePassword" principal.Name)
             }
         
-        let getTodosOnlyForUser principal =
+        let getTodosOnlyForUser principal : Async<option<('a -> Result<list<string>,FailureCase>)>> =
             async {
 
                 let accessToken = Authorization.todosAccssForUser principal

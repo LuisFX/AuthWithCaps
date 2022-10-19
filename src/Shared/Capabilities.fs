@@ -15,6 +15,7 @@ module Capabilities =
     type UpdateCustomerCap = CustomerData -> Result<unit,FailureCase>
     type UpdatePasswordCap = Password -> Result<unit,FailureCase>
     type GetTodosCap = unit -> Result<string list,FailureCase>
+    type FetchTodoCap = unit -> bool
 
     // type GetClientTodosCap = unit -> Result<CustomerData,FailureCase>
 
@@ -34,9 +35,27 @@ module Capabilities =
         /// given a customerId and User, attempt to get the UpdatePassword capability
         updatePassword : CustomerId -> User -> Async<UpdatePasswordCap option>
         /// get all todos for the given user
-        getTodos : User -> Async<GetTodosCap option>
+        getTodos : User -> GetTodosCap option
     }
 
-    type ICapabilityClientProvider = {
+    type IUICapabilityProvider = {
+        getTodos: unit -> GetTodosCap option
+    }
+
+    type IApiCapabilityProvider = {
         getTodos: User -> Async<string list>
     }
+
+    // apply the token, if present,
+    // to a function which has only the token as a parameter
+    let tokenToCap f token =
+        token 
+        |> Option.map (fun token -> 
+            fun () -> f token)
+
+    // apply the token, if present,
+    // to a function which has the token and other parameters
+    let tokenToCap2 f token =
+        token 
+        |> Option.map (fun token -> 
+            fun x -> f token x)
