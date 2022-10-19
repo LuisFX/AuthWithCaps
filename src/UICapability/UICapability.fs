@@ -1,4 +1,4 @@
-﻿module ClientCapability
+﻿module UICapability
 
 open System
 open Shared.Types

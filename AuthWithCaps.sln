@@ -31,7 +31,7 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Client.Tests", "tests\Clien
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Build", "Build.fsproj", "{C0244434-EC34-4D74-93A9-0E00DEC0C4D1}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ClientCapability", "src\ClientCapability\ClientCapability.fsproj", "{FC5437B9-C764-4C1B-A49F-4FDD53E4ABE7}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "UICapability", "src\UICapability\UICapability.fsproj", "{FC5437B9-C764-4C1B-A49F-4FDD53E4ABE7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -46,7 +46,7 @@ let update msg state =
         LoggedOut, Cmd.none
     | GetTodos u ->
         let cmd =
-            match ClientCapability.Capabilities.allCapabilities.getTodos u with
+            match UICapability.Capabilities.allCapabilities.getTodos u with
             | Some cap -> Cmd.OfAsync.perform todosApi.getTodos u GotTodos
             | None -> Cmd.none 
         state, cmd

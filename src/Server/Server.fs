@@ -36,7 +36,7 @@ let todosApi =
                 let! a = Capabilities.allCapabilities.getTodos u
                 match a with
                 | Some cap -> 
-                    match BusinessLayer.Logic.getTodos cap with
+                    match cap() with
                     | Ok l -> 
                         return l
                     | Error err ->
