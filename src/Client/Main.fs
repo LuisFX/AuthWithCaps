@@ -1,0 +1,162 @@
+module Main
+
+open Feliz
+open Feliz.UseElmish
+open Browser.Dom
+open Elmish
+
+open Auth
+open Shared.Types
+open Shared.Capabilities
+open BusinessLayer
+open Shared
+
+type Msg =
+    | Login of string * string
+    | GetTodos of GetTodosCap option
+    | GotTodos
+    | SelectCustomer of User * string
+    | GetCustomerDetails of GetCustomerCap option 
+    | Logout
+
+type CurrentState = 
+    | LoggedOut
+    | LoggedIn of User
+    | CustomerSelected of User * CustomerId
+    | GotCustomerDetails of CustomerData
+    | Exit
+        
+let init() = LoggedOut, Cmd.none
+
+let update msg state =
+    match msg with
+    | Logout ->
+        LoggedOut, Cmd.none
+    | GetTodos getTodosCap ->
+        console.log ("MSG: GetTodosCap", getTodosCap)
+        match getTodosCap with
+        | Some c -> 
+            let l = Logic.getTodos c
+            match l with
+            | Ok l -> 
+                console.log ("Got todos:", l)
+                state, Cmd.none
+            | Error err ->
+                console.log ("Error:", err)
+                state, Cmd.none
+        | None ->
+            state, Cmd.none
+
+    | Login (n,p) ->
+        match Authentication.authenticate n with
+        | Ok principal -> 
+            LoggedIn principal, Cmd.none
+        | Error err -> 
+            printfn ".. %A" err
+            state, Cmd.none
+    | SelectCustomer (principal, customerName) ->
+        match Authentication.customerIdForName customerName with
+            | Ok customerId -> 
+                // found -- change state
+                CustomerSelected (principal,customerId), Cmd.none
+            | Error err -> 
+                // not found -- stay in originalState 
+                printfn ".. %A" err
+                state, Cmd.none
+    | GetCustomerDetails getCustomerCap ->
+            let r =
+                match getCustomerCap with
+                | Some cap ->
+                    Logic.getCustomer cap
+                | None ->
+                    failwith "Not authorized for this capability"
+            match r with
+            | Ok d -> 
+                GotCustomerDetails d, Cmd.none
+            | Error err -> 
+                printfn ".. %A" err
+                state, Cmd.none
+            
+
+[<ReactComponent>]
+let App() =
+    let state, dispatch = React.useElmish(init, update, [| |])
+    match state with
+    | LoggedOut ->
+            Html.div [
+            Html.h1 "Login"
+            Html.input [
+                prop.type' "text"
+                prop.placeholder "Username"
+                prop.value "luisfx"
+            ]
+            Html.input [
+                prop.type' "password"
+                prop.placeholder "Password"
+                prop.value "123"
+            ]
+            Html.button [
+                prop.text "Login"
+                prop.onClick (fun _ -> Login ("luis", "123") |> dispatch)
+            ]
+        ]
+    | LoggedIn principal ->
+        Html.div [
+            Html.h1 (sprintf "Logged in: %A" principal.Name )
+
+            Html.span "Pick a customer"
+            Html.br []
+            Html.button [
+                prop.text "Luis"
+                prop.onClick (fun _ -> SelectCustomer (principal, "luis") |> dispatch)
+            ]
+            Html.br []
+            Html.button [
+                prop.text "maxime"
+                prop.onClick (fun _ ->  SelectCustomer (principal, "maxime") |> dispatch)
+            ]
+            Html.br []
+            Html.br []
+            Html.button [
+                prop.text "Logout"
+                prop.onClick (fun _ -> Logout |> dispatch)
+            ]
+        ]
+    | CustomerSelected (principal, customerId) ->
+        // get the individual component capabilities from the provider
+        let getCustomerCap,updateCustomerCap, updatePasswordCap, getTodosCap = 
+            Capabilities.getAllCapabilities customerId principal
+
+        // get the text for menu options based on capabilities that are present
+        let menuOptionActions = 
+            [
+                getCustomerCap |> Option.map (fun _ -> Html.button [ prop.text "Get"; prop.onClick (fun _ -> GetCustomerDetails getCustomerCap |> dispatch) ] )
+                updateCustomerCap |> Option.map (fun _ -> Html.button [ prop.text "Update Customer"; prop.onClick (fun _ -> printfn "Update Customer") ] )
+                updatePasswordCap |> Option.map (fun _ -> Html.button [ prop.text "Update Password"; prop.onClick (fun _ -> printfn "Update Password") ] )
+                getTodosCap |> Option.map (fun _ -> Html.button [ prop.text "Get Todos"; prop.onClick (fun _ -> GetTodos getTodosCap |> dispatch) ] )
+            ] 
+            |> List.choose id
+
+        Html.div [
+            Html.h1 (sprintf "Logged in: %A" principal.Name )
+            Html.h2 (sprintf "Customer: %A" customerId )
+            Html.br []
+            Html.div menuOptionActions
+            Html.br []
+            Html.button [
+                prop.text "Deselect Customer"
+                prop.onClick (fun _ -> Login (principal.Name, "") |> dispatch)
+            ]
+            Html.button [
+                prop.text "Logout"
+                prop.onClick (fun _ -> Logout |> dispatch)
+            ]
+        ]
+    | GotCustomerDetails d ->
+        Html.div (sprintf "Got customer details: %A" d)
+
+[<EntryPoint>]
+ReactDOM.render(
+    App(),
+    document.getElementById "root"
+)

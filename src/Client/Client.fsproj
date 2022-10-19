@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <DefineConstants>FABLE_COMPILER</DefineConstants>
+    </PropertyGroup>
+    <ItemGroup>
+        <None Include="index.html" />
+        <None Include="paket.references" />
+        <Compile Include="Index.fs" />
+        <Compile Include="App.fs" />
+        <Compile Include="Main.fs" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\BusinessLayer\BusinessLayer.fsproj" />
+        <ProjectReference Include="..\Shared\Shared.fsproj" />
+        <ProjectReference Include="..\Auth\Auth.fsproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="Feliz.UseElmish" Version="1.6.0" />
+    </ItemGroup>
+    <Import Project="..\..\.paket\Paket.Restore.targets" />
+</Project>

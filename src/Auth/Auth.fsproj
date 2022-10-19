@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Authentication.fs" />
+    <Compile Include="Authorization.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Shared/Shared.fsproj" />
+  </ItemGroup>
+</Project>
