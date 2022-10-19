@@ -12,24 +12,10 @@ open Shared
 open Fable
 open Fable.Remoting.Client
 
-type Msg =
-    | Login of string * string
-    // | GetTodos of GetTodosCap option
-    | GetTodos of User
-    | GotTodos of string list // this would actually be when server
-    | SelectCustomer of User * string
-    | GetCustomerDetails of GetCustomerCap option 
-    | Logout
-
 let capabilityApi =
     Remoting.createApi ()
     |> Remoting.withRouteBuilder Route.capabilityRouteBuilder
     |> Remoting.buildProxy<Capabilities.ICapabilityProvider>
-
-let todosApi =
-    Remoting.createApi ()
-    |> Remoting.withRouteBuilder Route.builder
-    |> Remoting.buildProxy<Capabilities.IApiCapabilityProvider>
 
 type CurrentState = 
     | LoggedOut
@@ -45,11 +31,12 @@ let update msg state =
     | Logout ->
         LoggedOut, Cmd.none
     | GetTodos u ->
-        let cmd =
-            match UICapability.Capabilities.allCapabilities.getTodos u with
-            | Some cap -> Cmd.OfAsync.perform todosApi.getTodos u GotTodos
-            | None -> Cmd.none 
-        state, cmd
+        // let cmd =
+        state,
+        match UICapability.Capabilities.allCapabilities.getTodos u with
+        | Some cap ->
+            cap()
+        | None -> Cmd.none 
 
     | GotTodos l ->
         console.log ("Got todos:", l)
@@ -63,6 +50,7 @@ let update msg state =
         | Error err -> 
             printfn ".. %A" err
             state, Cmd.none
+
     | SelectCustomer (principal, customerName) ->
         match Authentication.customerIdForName customerName with
             | Ok customerId -> 
@@ -72,19 +60,6 @@ let update msg state =
                 // not found -- stay in originalState 
                 printfn ".. %A" err
                 state, Cmd.none
-    // | GetCustomerDetails getCustomerCap ->
-    //         let r =
-    //             match getCustomerCap with
-    //             | Some cap ->
-    //                 Logic.getCustomer cap
-    //             | None ->
-    //                 failwith "Not authorized for this capability"
-    //         match r with
-    //         | Ok d -> 
-    //             GotCustomerDetails d, Cmd.none
-    //         | Error err -> 
-    //             printfn ".. %A" err
-    //             state, Cmd.none
             
 
 [<ReactComponent>]

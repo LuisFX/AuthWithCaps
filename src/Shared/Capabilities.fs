@@ -1,8 +1,8 @@
 namespace Shared
-
+open Elmish
 module Capabilities =
     open Types
-    open Shared
+    open Shared.Types
     open System.Collections.Generic
 
     // each access token gets its own type
@@ -15,7 +15,7 @@ module Capabilities =
     type UpdateCustomerCap = CustomerData -> Result<unit,FailureCase>
     type UpdatePasswordCap = Password -> Result<unit,FailureCase>
     type GetTodosCap = unit -> Result<string list,FailureCase>
-    type FetchTodoCap = unit -> bool
+    type FetchTodoCap = unit -> Cmd<Msg>
 
     // type GetClientTodosCap = unit -> Result<CustomerData,FailureCase>
 
@@ -39,11 +39,11 @@ module Capabilities =
     }
 
     type IUICapabilityProvider = {
-        getTodos: User -> GetTodosCap option
+        getTodos: User -> FetchTodoCap option
     }
 
     type IApiCapabilityProvider = {
-        getTodos: User -> Async<string list>
+        getTodos: unit -> Async<string list>
     }
 
     // apply the token, if present,

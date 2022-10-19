@@ -31,7 +31,11 @@ open Shared
 
 let todosApi =
     { 
-        getTodos = fun u -> 
+        getTodos = fun _ ->
+            let u = {
+                Name = "user1"
+                Roles = [| "admin" |]
+            }
             async {
                 let! a = Capabilities.allCapabilities.getTodos u
                 match a with
