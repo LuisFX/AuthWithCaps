@@ -35,11 +35,11 @@ module Capabilities =
         /// given a customerId and User, attempt to get the UpdatePassword capability
         updatePassword : CustomerId -> User -> Async<UpdatePasswordCap option>
         /// get all todos for the given user
-        getTodos : User -> GetTodosCap option
+        getTodos : User -> Async<GetTodosCap option>
     }
 
     type IUICapabilityProvider = {
-        getTodos: unit -> GetTodosCap option
+        getTodos: User -> GetTodosCap option
     }
 
     type IApiCapabilityProvider = {

@@ -22,8 +22,5 @@ module Capabilities =
 
         // create the record that contains the capabilities
         {
-            getCustomer = failwith "not implemented"
-            updateCustomer = failwith "not implemented"
-            updatePassword = failwith "not implemented"
             getTodos = getTodosOnlyForUser //User -> option<GetTodosCap>
-        } : ICapabilityProvider
+        } : IUICapabilityProvider

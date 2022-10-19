@@ -43,7 +43,7 @@ let todosApi =
                         return []
                 | None -> return []
             }
-    } : ICapabilityClientProvider
+    } : IApiCapabilityProvider
 
 let webApp : Giraffe.Core.HttpFunc -> Microsoft.AspNetCore.Http.HttpContext -> Giraffe.Core.HttpFuncResult =
     Remoting.createApi ()
