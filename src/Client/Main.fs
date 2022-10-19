@@ -16,7 +16,7 @@ open Fable.Remoting.Client
 type Msg =
     | Login of string * string
     // | GetTodos of GetTodosCap option
-    | GetTodos
+    | GetTodos of User
     | GotTodos of string list // this would actually be when server
     | SelectCustomer of User * string
     | GetCustomerDetails of GetCustomerCap option 
@@ -30,7 +30,7 @@ let capabilityApi =
 let todosApi =
     Remoting.createApi ()
     |> Remoting.withRouteBuilder Route.builder
-    |> Remoting.buildProxy<Capabilities.ITodosApi>
+    |> Remoting.buildProxy<Capabilities.ICapabilityClientProvider>
 
 type CurrentState = 
     | LoggedOut
@@ -45,26 +45,8 @@ let update msg state =
     match msg with
     | Logout ->
         LoggedOut, Cmd.none
-    // | GetTodos getTodosCap ->
-    //     console.log ("MSG: GetTodosCap", getTodosCap)
-    //     match getTodosCap with
-    //     | Some c -> 
-    //         let l = Logic.getTodos c
-    //         match l with
-    //         | Ok l -> 
-    //             console.log ("Got todos:", l)
-    //             state, Cmd.none
-    //         | Error err ->
-    //             console.log ("Error:", err)
-    //             state, Cmd.none
-    //     | None ->
-    //         state, Cmd.none
-    | GetTodos ->
-        let user = ({
-            Name = "luis"
-            Roles = [| "Customer" |]
-        })
-        let cmd = Cmd.OfAsync.perform todosApi.getTodos () GotTodos
+    | GetTodos u ->
+        let cmd = Cmd.OfAsync.perform todosApi.getTodos u GotTodos
         // let cmd = Cmd.OfAsync.perform capabilityApi.getTodos user (fun x -> GotTodos x)
         state, cmd
     | GotTodos l ->
@@ -148,32 +130,11 @@ let App() =
             ]
         ]
     | CustomerSelected (principal, customerId) ->
-        // get the individual component capabilities from the provider
-        let getCustomerCap,updateCustomerCap, updatePasswordCap, getTodosCap = 
-            Capabilities.getAllCapabilities customerId principal
-
-        // let getClientTodosCap = 
-        //     ClientCapabilities.allCapabilities.getTodos
-        
-        
-        // let a = getClientTodosCap |> Option.map (fun _ -> Html.button [ prop.text "Get Todos"; prop.onClick (fun _ -> GetTodos |> dispatch) ] )
-
-        // get the text for menu options based on capabilities that are present
-        // let menuOptionActions = 
-        //     [
-        //         // getCustomerCap |> Option.map (fun _ -> Html.button [ prop.text "Get"; prop.onClick (fun _ -> GetCustomerDetails getCustomerCap |> dispatch) ] )
-        //         // updateCustomerCap |> Option.map (fun _ -> Html.button [ prop.text "Update Customer"; prop.onClick (fun _ -> printfn "Update Customer") ] )
-        //         // updatePasswordCap |> Option.map (fun _ -> Html.button [ prop.text "Update Password"; prop.onClick (fun _ -> printfn "Update Password") ] )
-        //         // getTodosCap |> Option.map (fun _ -> Html.button [ prop.text "Get Todos"; prop.onClick (fun _ -> GetTodos |> dispatch) ] )
-        //     ] 
-        //     |> List.choose id
-
         Html.div [
             Html.h1 (sprintf "Logged in: %A" principal.Name )
             Html.h2 (sprintf "Customer: %A" customerId )
             Html.br []
-            // Html.div menuOptionActions
-            Html.button [ prop.text "Get Todos"; prop.onClick (fun _ -> GetTodos |> dispatch) ]
+            Html.button [ prop.text "Get Todos"; prop.onClick (fun _ -> GetTodos principal |> dispatch) ]
             Html.br []
             Html.button [
                 prop.text "Deselect Customer"

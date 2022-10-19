@@ -4,8 +4,9 @@ open Fable.Remoting.Server
 open Fable.Remoting.Giraffe
 open Saturn
 open BusinessLayer
-open Shared
+open Shared.Capabilities
 open Shared.Types
+open Shared
 
 // module CapabilityEndpoints =
 //     let RouteBuilder =
@@ -30,13 +31,9 @@ open Shared.Types
 
 let todosApi =
     { 
-        getTodos = fun () -> 
+        getTodos = fun u -> 
             async {
-                let user = {
-                    Name = "luis"
-                    Roles = [| "Customer" |]
-                }
-                let! a = Capabilities.allCapabilities.getTodos user
+                let! a = Capabilities.allCapabilities.getTodos u
                 match a with
                 | Some cap -> 
                     match BusinessLayer.Logic.getTodos cap with
@@ -46,19 +43,13 @@ let todosApi =
                         return []
                 | None -> return []
             }
-    }
+    } : ICapabilityClientProvider
 
 let webApp : Giraffe.Core.HttpFunc -> Microsoft.AspNetCore.Http.HttpContext -> Giraffe.Core.HttpFuncResult =
     Remoting.createApi ()
     |> Remoting.withRouteBuilder Route.builder
     |> Remoting.fromValue todosApi
     |> Remoting.buildHttpHandler
-
-// let webAppCapabilities: Giraffe.Core.HttpFunc -> Microsoft.AspNetCore.Http.HttpContext -> Giraffe.Core.HttpFuncResult =
-//     Remoting.createApi ()
-//     |> Remoting.withRouteBuilder Route.capabilityRouteBuilder
-//     |> Remoting.fromValue Capabilities.allCapabilities
-//     |> Remoting.buildHttpHandler
 
 let app =
     application {

@@ -32,11 +32,6 @@ module Logic =
         match capability "password"  with
         | Ok _ -> printfn "Password updated" 
         | Error err -> printfn ".. %A" err
-
-// module ClientCapabilities =
-//     let allCapabilities =
-//         return accessToken |> tokenToCap2 CustomerDatastore.updateCustomer
-
 module Capabilities =
 
     let allCapabilities = 

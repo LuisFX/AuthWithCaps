@@ -37,6 +37,6 @@ module Capabilities =
         getTodos : User -> Async<GetTodosCap option>
     }
 
-    type ITodosApi = {
-        getTodos: unit -> Async<string list>
+    type ICapabilityClientProvider = {
+        getTodos: User -> Async<string list>
     }
