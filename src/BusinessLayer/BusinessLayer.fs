@@ -33,7 +33,12 @@ module Logic =
         | Ok _ -> printfn "Password updated" 
         | Error err -> printfn ".. %A" err
 
+// module ClientCapabilities =
+//     let allCapabilities =
+//         return accessToken |> tokenToCap2 CustomerDatastore.updateCustomer
+
 module Capabilities =
+
     let allCapabilities = 
         
         // apply the token, if present,
@@ -66,37 +71,51 @@ module Capabilities =
             cap1 |> Authorization.restrict restriction 
 
         let getCustomerOnlyForSameId_OrForAgentsInBusinessHours id (principal:User) = 
-            let cap1 = getCustomerOnlyForSameId id principal 
-            let cap2 = getCustomerOnlyForAgentsInBusinessHours id principal 
-            Authorization.first [cap1; cap2]
+            async {
+                let cap1 = getCustomerOnlyForSameId id principal 
+                let cap2 = getCustomerOnlyForAgentsInBusinessHours id principal 
+                return Authorization.first [cap1; cap2]
+            }
 
         let updateCustomerOnlyForSameId id principal = 
-            let accessToken = Authorization.onlyForSameId id (principal:User)
-            accessToken |> tokenToCap2 CustomerDatastore.updateCustomer
+            async {
+                let accessToken = Authorization.onlyForSameId id (principal:User)
+                return accessToken |> tokenToCap2 CustomerDatastore.updateCustomer
+            }
 
         let updateCustomerOnlyForAgentsInBusinessHours id principal = 
-            let accessToken = Authorization.onlyForAgents id principal
-            let cap1 = accessToken |> tokenToCap2 CustomerDatastore.updateCustomer
-            // uncomment to get the restriction
-            let restriction f = Authorization.onlyIfDuringBusinessHours (DateTime.Now) f // with restriction
-            // let restriction = Some  // no restriction
-            cap1 |> Authorization.restrict restriction 
+            async {
+                let accessToken = Authorization.onlyForAgents id principal
+                let cap1 = accessToken |> tokenToCap2 CustomerDatastore.updateCustomer
+                // uncomment to get the restriction
+                let restriction f = Authorization.onlyIfDuringBusinessHours (DateTime.Now) f // with restriction
+                // let restriction = Some  // no restriction
+                return cap1 |> Authorization.restrict restriction 
+            }
 
         let updateCustomerOnlyForSameId_OrForAgentsInBusinessHours id (principal:User) = 
-            let cap1 = updateCustomerOnlyForSameId id principal 
-            let cap2 = updateCustomerOnlyForAgentsInBusinessHours id principal 
-            Authorization.first [cap1; cap2]
+            async {
+                let! cap1 = updateCustomerOnlyForSameId id principal 
+                let! cap2 = updateCustomerOnlyForAgentsInBusinessHours id principal 
+                return Authorization.first [cap1; cap2]
+            }
 
         let updatePasswordOnlyForSameId id (principal:User) = 
-            let accessToken = Authorization.passwordUpdate id principal
-            let cap = accessToken |> tokenToCap2 CustomerDatastore.updatePassword
-            cap 
-            |> Option.map (Authorization.auditable "UpdatePassword" principal.Name)
+            async {
+                let accessToken = Authorization.passwordUpdate id principal
+                let cap = accessToken |> tokenToCap2 CustomerDatastore.updatePassword
+                return 
+                    cap 
+                    |> Option.map (Authorization.auditable "UpdatePassword" principal.Name)
+            }
         
         let getTodosOnlyForUser principal =
-            let accessToken = Authorization.todosAccssForUser principal
-            let cap = accessToken |> tokenToCap2 TodoDataStore.getTodos
-            cap // |> Option.map (Authorization.auditable "GetTodos" principal.Name)
+            async {
+
+                let accessToken = Authorization.todosAccssForUser principal
+                let cap = accessToken |> tokenToCap2 TodoDataStore.getTodos
+                return cap // |> Option.map (Authorization.auditable "GetTodos" principal.Name)
+            }
             
 
         // create the record that contains the capabilities
@@ -105,7 +124,7 @@ module Capabilities =
             updateCustomer = updateCustomerOnlyForSameId_OrForAgentsInBusinessHours 
             updatePassword = updatePasswordOnlyForSameId
             getTodos = getTodosOnlyForUser 
-        } : CapabilityProvider
+        } : ICapabilityProvider
 
     let getAllCapabilities customerId principal = 
         let getCustomer = allCapabilities.getCustomer customerId principal 

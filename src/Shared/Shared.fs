@@ -19,7 +19,11 @@ module Route =
     let builder typeName methodName =
         sprintf "/api/%s/%s" typeName methodName
 
+    let capabilityRouteBuilder _ methodName =
+        printf "Route is: %s" methodName
+        sprintf "/api/capability/%s" methodName
+
 type ITodosApi = {
-        getTodos: unit -> Async<Todo list>
-        addTodo: Todo -> Async<Todo>
+        getTodos: unit -> Async<string list>
+        // addTodo: Todo -> Async<Todo>
     }
