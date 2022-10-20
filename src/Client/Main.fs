@@ -31,17 +31,14 @@ let update msg state =
     | Logout ->
         LoggedOut, Cmd.none
     | GetTodos u ->
-        // let cmd =
         state,
         match UICapability.Capabilities.allCapabilities.getTodos u with
-        | Some cap ->
-            cap()
-        | None -> Cmd.none 
+        | Some cap -> cap()
+        | None -> Cmd.none
 
     | GotTodos l ->
         console.log ("Got todos:", l)
         state, Cmd.none
-
 
     | Login (n,p) ->
         match Authentication.authenticate n with
@@ -107,11 +104,25 @@ let App() =
             ]
         ]
     | CustomerSelected (principal, customerId) ->
+        let getTodosCap = UICapability.Capabilities.allCapabilities.getTodos principal
+
+        // get the text for menu options based on capabilities that are present
+        let menuOptionActions = 
+            [
+                getTodosCap
+                |> Option.map (fun _ -> 
+                    Html.button [
+                        prop.text "Get Todos"
+                        prop.onClick (fun _ -> GetTodos principal|> dispatch)
+                    ] 
+                )
+            ] 
+            |> List.choose id
         Html.div [
             Html.h1 (sprintf "Logged in: %A" principal.Name )
             Html.h2 (sprintf "Customer: %A" customerId )
             Html.br []
-            Html.button [ prop.text "Get Todos"; prop.onClick (fun _ -> GetTodos principal |> dispatch) ]
+            Html.div menuOptionActions
             Html.br []
             Html.button [
                 prop.text "Deselect Customer"

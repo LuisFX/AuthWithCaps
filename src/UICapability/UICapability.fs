@@ -22,14 +22,7 @@ module Capabilities =
             |> tokenToCap2 (fun accessToken _ ->
                 let (AccssTodos user) = accessToken.Data
                 if user.Name = principal.Name then
-                    let cmd : Cmd<Msg> =
-                        Cmd.OfAsyncWith.either
-                            Async.StartImmediate
-                            api.getTodos
-                            ()
-                            GotTodos
-                            GotTodosError
-                    cmd
+                    Cmd.OfAsyncWith.either Async.StartImmediate api.getTodos () GotTodos GotTodosError
                 else
                     Cmd.none
             )
