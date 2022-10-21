@@ -15,7 +15,7 @@ module Capabilities =
         |> Remoting.withRouteBuilder Route.builder
         |> Remoting.buildProxy<Capabilities.IApiCapabilityProvider>
 
-    let allCapabilities = 
+    let private allCapabilities = 
         let getTodosOnlyForUser (principal:User) =
             let accessToken : AccessToken<AccssTodos> option = Authorization.todosAccssForUser principal
             accessToken
@@ -31,4 +31,8 @@ module Capabilities =
         {
             getTodos = getTodosOnlyForUser //User -> option<GetTodosCap>
         } : IUICapabilityProvider
+
+    let mainCaps principal =
+        allCapabilities.getTodos principal
+
 

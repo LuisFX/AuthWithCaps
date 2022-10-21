@@ -17,48 +17,59 @@ let capabilityApi =
     |> Remoting.withRouteBuilder Route.capabilityRouteBuilder
     |> Remoting.buildProxy<Capabilities.ICapabilityProvider>
 
-type CurrentState = 
-    | LoggedOut
+
+type Authenticated =
     | LoggedIn of User
     | CustomerSelected of User * CustomerId
-    | GotCustomerDetails of CustomerData
-    | Exit
+
+type State = 
+    | LoggedOut
+    | Authenticated of Authenticated * option<FetchTodoCap>
         
 let init() = LoggedOut, Cmd.none
 
 let update msg state =
-    match msg with
-    | Logout ->
+    match state, msg with
+    | _, Logout ->
         LoggedOut, Cmd.none
-    | GetTodos u ->
+        
+    | Authenticated (a,c), GetTodos ->
         state,
-        match UICapability.Capabilities.allCapabilities.getTodos u with
+        match c with
         | Some cap -> cap()
         | None -> Cmd.none
 
-    | GotTodos l ->
+    | _, GotTodos l ->
         console.log ("Got todos:", l)
         state, Cmd.none
 
-    | Login (n,p) ->
+    | _, Login (n,p) ->
         match Authentication.authenticate n with
         | Ok principal -> 
-            LoggedIn principal, Cmd.none
+            Authenticated (LoggedIn principal, (UICapability.Capabilities.mainCaps principal) ), Cmd.none
         | Error err -> 
             printfn ".. %A" err
             state, Cmd.none
 
-    | SelectCustomer (principal, customerName) ->
+    | Authenticated (a,c), SelectCustomer (principal, customerName) ->
         match Authentication.customerIdForName customerName with
             | Ok customerId -> 
                 // found -- change state
-                CustomerSelected (principal,customerId), Cmd.none
+                let state = Authenticated( CustomerSelected(principal, customerId), c )
+                state, Cmd.none
             | Error err -> 
                 // not found -- stay in originalState 
                 printfn ".. %A" err
                 state, Cmd.none
             
-
+let getTodosUI getTodosCap principal dispatch =
+    getTodosCap
+    |> Option.map (fun _ -> 
+        Html.button [
+            prop.text "Get Todos"
+            prop.onClick (fun _ -> GetTodos |> dispatch)
+        ] 
+    )
 [<ReactComponent>]
 let App() =
     let state, dispatch = React.useElmish(init, update, [| |])
@@ -81,7 +92,7 @@ let App() =
                 prop.onClick (fun _ -> Login ("luis", "123") |> dispatch)
             ]
         ]
-    | LoggedIn principal ->
+    | Authenticated ( (LoggedIn principal ), cap )  ->
         Html.div [
             Html.h1 (sprintf "Logged in: %A" principal.Name )
 
@@ -103,19 +114,11 @@ let App() =
                 prop.onClick (fun _ -> Logout |> dispatch)
             ]
         ]
-    | CustomerSelected (principal, customerId) ->
-        let getTodosCap = UICapability.Capabilities.allCapabilities.getTodos principal
-
+    | Authenticated ( (CustomerSelected (principal, customerId )), cap ) -> //CustomerSelected (principal, customerId) ->
         // get the text for menu options based on capabilities that are present
         let menuOptionActions = 
             [
-                getTodosCap
-                |> Option.map (fun _ -> 
-                    Html.button [
-                        prop.text "Get Todos"
-                        prop.onClick (fun _ -> GetTodos principal|> dispatch)
-                    ] 
-                )
+                getTodosUI cap principal dispatch
             ] 
             |> List.choose id
         Html.div [
@@ -133,8 +136,6 @@ let App() =
                 prop.onClick (fun _ -> Logout |> dispatch)
             ]
         ]
-    | GotCustomerDetails d ->
-        Html.div (sprintf "Got customer details: %A" d)
 
 [<EntryPoint>]
 ReactDOM.render(

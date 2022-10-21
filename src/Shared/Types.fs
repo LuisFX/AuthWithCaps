@@ -9,7 +9,7 @@ module Types =
 
     type Msg =
         | Login of string * string
-        | GetTodos of User
+        | GetTodos
         | GotTodos of string list // this would actually be when server
         | GotTodosError of exn
         | SelectCustomer of User * string
