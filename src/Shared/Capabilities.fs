@@ -15,7 +15,7 @@ module Capabilities =
     type UpdateCustomerCap = CustomerData -> Result<unit,FailureCase>
     type UpdatePasswordCap = Password -> Result<unit,FailureCase>
     type GetTodosCap = unit -> Result<string list,FailureCase>
-    type FetchTodoCap = unit -> Cmd<Msg>
+    type FetchTodoCap = unit -> Cmd<Msg<string list, exn>>
 
     // type GetClientTodosCap = unit -> Result<CustomerData,FailureCase>
 

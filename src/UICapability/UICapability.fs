@@ -15,14 +15,14 @@ module Capabilities =
         |> Remoting.withRouteBuilder Route.builder
         |> Remoting.buildProxy<Capabilities.IApiCapabilityProvider>
 
-    let private allCapabilities = 
+    let  allCapabilities succss failure = 
         let getTodosOnlyForUser (principal:User) =
             let accessToken : AccessToken<AccssTodos> option = Authorization.todosAccssForUser principal
             accessToken
             |> tokenToCap2 (fun accessToken _ ->
                 let (AccssTodos user) = accessToken.Data
                 if user.Name = principal.Name then
-                    Cmd.OfAsyncWith.either Async.StartImmediate api.getTodos () GotTodos GotTodosError
+                    Cmd.OfAsyncWith.either Async.StartImmediate api.getTodos () succss failure
                 else
                     Cmd.none
             )
@@ -32,7 +32,11 @@ module Capabilities =
             getTodos = getTodosOnlyForUser //User -> option<GetTodosCap>
         } : IUICapabilityProvider
 
-    let mainCaps principal =
-        allCapabilities.getTodos principal
+    let mainCaps success failure principal =
+        (allCapabilities success failure).getTodos principal
 
+let inline square (x: ^a when ^a: (static member (*): ^a -> ^a -> ^a)) = x * x
+let inline dupe (x: ^a when ^a: (static member (+): ^a -> ^a -> ^a)) = x + x
 
+let aa = square 3
+let ab = dupe "s"

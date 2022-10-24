@@ -7,14 +7,16 @@ module Types =
     type CustomerData = CustomerData of string
     type Password = Password of string
 
-    type Msg =
+    // type TryValue<'a,'b> =
+    //     | Value of 'a
+    //     | Error of 'b
+    type Msg<'a, 'b> =
         | Login of string * string
         | GetTodos
-        | GotTodos of string list // this would actually be when server
-        | GotTodosError of exn
+        | GotTodos of 'a // this would actually be when server
+        | GotTodosError of 'b
         | SelectCustomer of User * string
         | Logout
-
     type FailureCase = 
         | AuthenticationFailed of string
         | AuthorizationFailed
