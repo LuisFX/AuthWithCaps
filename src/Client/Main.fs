@@ -20,19 +20,35 @@ let capabilityApi =
 type Authenticated =
     | LoggedIn of User
     | CustomerSelected of User * CustomerId * string list option
-type State = 
+
+type State<'PageCaps> = 
     | LoggedOut
-    | Authenticated of Authenticated * option<FetchTodoCap>
-        
+    | Authenticated of Authenticated * 'PageCaps
+
 let init() = LoggedOut, Cmd.none
 
 let update msg state =
     match state with
-    | Authenticated (a, capOpt) ->
+    | LoggedOut ->
+        match msg with
+        | Login (u,p) ->
+            match Authentication.authenticate u with
+            | Ok principal ->
+                let pageCaps = (UICapability.Capabilities.mainPageCaps GotTodos GotTodosError principal)
+                let newState = Authenticated (
+                    LoggedIn principal, 
+                    pageCaps
+                )
+                newState, Cmd.none
+            | Error err -> 
+                printfn ".. %A" err
+                state, Cmd.none
+        | _ -> state, Cmd.none
+    | Authenticated (a, pageCaps) ->
         match msg with
         | GetTodos ->
             let cmd =
-                match capOpt with
+                match pageCaps.getTodos1 with
                 | Some cap -> cap() //This is hard to read, because it hides the messages that will be called upon success or failure
                 | None -> Cmd.none
             state, cmd
@@ -42,7 +58,7 @@ let update msg state =
                 match a with
                 | LoggedIn u -> failwith "Not Implemented"
                 | CustomerSelected (principal, customerId, todos) -> principal, customerId
-            let state = Authenticated( CustomerSelected(principal, customerId, Some todos), capOpt )
+            let state = Authenticated( CustomerSelected(principal, customerId, Some todos), pageCaps )
             state, Cmd.none
 
         | GotTodosError(_) -> failwith "Error getting To-Do's"
@@ -50,67 +66,13 @@ let update msg state =
             match Authentication.customerIdForName customerName with
             | Ok customerId -> 
                 // found -- change state
-                let state = Authenticated( CustomerSelected(principal, customerId, None), capOpt )
+                let state = Authenticated( CustomerSelected(principal, customerId, None), pageCaps )
                 state, Cmd.none
             | Error err -> 
                 // not found -- stay in originalState 
                 printfn ".. %A" err
                 state, Cmd.none
         | Logout -> failwith "Not Implemented"
-            
-    | LoggedOut ->
-        match msg with
-        | Login (u,p) ->
-            match Authentication.authenticate u with
-            | Ok principal ->
-                let newState = Authenticated (
-                    LoggedIn principal, 
-                    (UICapability.Capabilities.mainCaps GotTodos GotTodosError principal) 
-                )
-                newState, Cmd.none
-            | Error err -> 
-                printfn ".. %A" err
-                state, Cmd.none
-        | _ -> state, Cmd.none
-        // | GetTodos(_) -> failwith "Not Implemented"
-        // | GotTodos(_) -> failwith "Not Implemented"
-        // | GotTodosError(_) -> failwith "Not Implemented"
-        // | SelectCustomer(_, _) -> failwith "Not Implemented"
-        // | Logout -> failwith "Not Implemented"
-        
-
-    // match state, msg with
-    // | _, Logout ->
-    //     LoggedOut, Cmd.none
-        
-    // | Authenticated (a,c), GetTodos ->
-    //     state,
-    //     match c with
-    //     | Some cap -> cap()
-    //     | None -> Cmd.none
-
-    // | _, GotTodos l ->
-    //     console.log ("Got todos:", l)
-    //     state, Cmd.none
-
-    // | _, Login (n,p) ->
-    //     match Authentication.authenticate n with
-    //     | Ok principal -> 
-    //         Authenticated (LoggedIn principal, (UICapability.Capabilities.mainCaps principal) ), Cmd.none
-    //     | Error err -> 
-    //         printfn ".. %A" err
-    //         state, Cmd.none
-
-    // | Authenticated (a,c), SelectCustomer (principal, customerName) ->
-    //     match Authentication.customerIdForName customerName with
-    //         | Ok customerId -> 
-    //             // found -- change state
-    //             let state = Authenticated( CustomerSelected(principal, customerId), c )
-    //             state, Cmd.none
-    //         | Error err -> 
-    //             // not found -- stay in originalState 
-    //             printfn ".. %A" err
-    //             state, Cmd.none
             
 let getTodosUI getTodosCap principal dispatch =
     getTodosCap
@@ -123,6 +85,7 @@ let getTodosUI getTodosCap principal dispatch =
 [<ReactComponent>]
 let App() =
     let state, dispatch = React.useElmish(init, update, [| |])
+
     match state with
     | LoggedOut ->
             Html.div [
@@ -164,18 +127,16 @@ let App() =
                 prop.onClick (fun _ -> Logout |> dispatch)
             ]
         ]
-    | Authenticated ( (CustomerSelected (principal, customerId, todos )), cap ) -> //CustomerSelected (principal, customerId) ->
+    | Authenticated ( (CustomerSelected (principal, customerId, todos )), pageCaps ) -> //CustomerSelected (principal, customerId) ->
         // get the text for menu options based on capabilities that are present
         let menuOptionActions = 
             [
-                getTodosUI cap principal dispatch
+                getTodosUI pageCaps.getTodos1 principal dispatch
             ] 
             |> List.choose id
         let todosUi = 
             match todos with
-            | Some todos ->
-                Html.ul (todos |> List.map (fun t -> Html.li [ Html.text t ]))
-                
+            | Some todos -> Html.ul (todos |> List.map (fun t -> Html.li [ Html.text t ]))
             | None -> null
         Html.div [
             Html.h1 (sprintf "Logged in: %A" principal.Name )

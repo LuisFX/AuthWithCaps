@@ -40,6 +40,7 @@ module Capabilities =
 
     type IUICapabilityProvider = {
         getTodos: User -> FetchTodoCap option
+        getTodos2: User -> FetchTodoCap option
     }
 
     type IApiCapabilityProvider = {

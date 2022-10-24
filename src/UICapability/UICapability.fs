@@ -15,7 +15,7 @@ module Capabilities =
         |> Remoting.withRouteBuilder Route.builder
         |> Remoting.buildProxy<Capabilities.IApiCapabilityProvider>
 
-    let  allCapabilities succss failure = 
+    let allCapabilities succss failure = 
         let getTodosOnlyForUser (principal:User) =
             let accessToken : AccessToken<AccssTodos> option = Authorization.todosAccssForUser principal
             accessToken
@@ -30,13 +30,17 @@ module Capabilities =
         // create the record that contains the capabilities
         {
             getTodos = getTodosOnlyForUser //User -> option<GetTodosCap>
+            getTodos2 = getTodosOnlyForUser //User -> option<GetTodosCap>
         } : IUICapabilityProvider
 
-    let mainCaps success failure principal =
-        (allCapabilities success failure).getTodos principal
+    let mainPageCaps success failure principal =
+        {|
+            getTodos1 = (allCapabilities success failure).getTodos principal
+            getTodos2 = (allCapabilities success failure).getTodos2 principal
+        |}
 
-let inline square (x: ^a when ^a: (static member (*): ^a -> ^a -> ^a)) = x * x
-let inline dupe (x: ^a when ^a: (static member (+): ^a -> ^a -> ^a)) = x + x
+// let inline square (x: ^a when ^a: (static member (*): ^a -> ^a -> ^a)) = x * x
+// let inline dupe (x: ^a when ^a: (static member (+): ^a -> ^a -> ^a)) = x + x
 
-let aa = square 3
-let ab = dupe "s"
+// let aa = square 3
+// let ab = dupe "s"
