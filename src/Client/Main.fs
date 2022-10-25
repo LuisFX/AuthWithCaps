@@ -12,18 +12,13 @@ open Shared
 open Fable
 open Fable.Remoting.Client
 
-let capabilityApi =
-    Remoting.createApi ()
-    |> Remoting.withRouteBuilder Route.capabilityRouteBuilder
-    |> Remoting.buildProxy<Capabilities.ICapabilityProvider>
-
 type Authenticated =
     | LoggedIn of User
     | CustomerSelected of User * CustomerId * string list option
 
-type State<'PageCaps> = 
+type State<'PageCapsOpts> =
     | LoggedOut
-    | Authenticated of Authenticated * 'PageCaps
+    | Authenticated of Authenticated * 'PageCapsOpts
 
 let init() = LoggedOut, Cmd.none
 
@@ -34,13 +29,18 @@ let update msg state =
         | Login (u,p) ->
             match Authentication.authenticate u with
             | Ok principal ->
-                let pageCaps = (UICapability.Capabilities.mainPageCaps GotTodos GotTodosError principal)
+                let pageCaps = (UICapability.Capabilities.mainPageCaps principal)
+                let getTodosWired1 = pageCaps.getTodos1 GotTodos GotTodosError
+                let getTodosWired2 = pageCaps.getTodos2
+
+                let pageCapsOpts = {| getTodos1 = getTodosWired1; getTodos2 = getTodosWired2 |}
+
                 let newState = Authenticated (
-                    LoggedIn principal, 
-                    pageCaps
+                    LoggedIn principal,
+                    pageCapsOpts
                 )
                 newState, Cmd.none
-            | Error err -> 
+            | Error err ->
                 printfn ".. %A" err
                 state, Cmd.none
         | _ -> state, Cmd.none
@@ -49,7 +49,7 @@ let update msg state =
         | GetTodos ->
             let cmd =
                 match pageCaps.getTodos1 with
-                | Some cap -> cap() //This is hard to read, because it hides the messages that will be called upon success or failure
+                | Some cap -> cap()  //This is hard to read, because it hides the messages that will be called upon success or failure
                 | None -> Cmd.none
             state, cmd
         | Login(_, _) -> failwith "Not Implemented"
@@ -64,23 +64,23 @@ let update msg state =
         | GotTodosError(_) -> failwith "Error getting To-Do's"
         | SelectCustomer(principal, customerName) ->
             match Authentication.customerIdForName customerName with
-            | Ok customerId -> 
+            | Ok customerId ->
                 // found -- change state
                 let state = Authenticated( CustomerSelected(principal, customerId, None), pageCaps )
                 state, Cmd.none
-            | Error err -> 
-                // not found -- stay in originalState 
+            | Error err ->
+                // not found -- stay in originalState
                 printfn ".. %A" err
                 state, Cmd.none
         | Logout -> failwith "Not Implemented"
-            
+
 let getTodosUI getTodosCap principal dispatch =
     getTodosCap
-    |> Option.map (fun _ -> 
+    |> Option.map (fun _ ->
         Html.button [
             prop.text "Get Todos"
             prop.onClick (fun _ -> GetTodos |> dispatch)
-        ] 
+        ]
     )
 [<ReactComponent>]
 let App() =
@@ -129,12 +129,12 @@ let App() =
         ]
     | Authenticated ( (CustomerSelected (principal, customerId, todos )), pageCaps ) -> //CustomerSelected (principal, customerId) ->
         // get the text for menu options based on capabilities that are present
-        let menuOptionActions = 
+        let menuOptionActions =
             [
                 getTodosUI pageCaps.getTodos1 principal dispatch
-            ] 
+            ]
             |> List.choose id
-        let todosUi = 
+        let todosUi =
             match todos with
             | Some todos -> Html.ul (todos |> List.map (fun t -> Html.li [ Html.text t ]))
             | None -> null

@@ -15,28 +15,38 @@ module Capabilities =
         |> Remoting.withRouteBuilder Route.builder
         |> Remoting.buildProxy<Capabilities.IApiCapabilityProvider>
 
-    let allCapabilities succss failure = 
-        let getTodosOnlyForUser (principal:User) =
+    let allCapabilities  =
+        let getTodosOnlyForUser (principal:User) (success:string list -> Msg) (failure:exn -> Msg) =
             let accessToken : AccessToken<AccssTodos> option = Authorization.todosAccssForUser principal
             accessToken
             |> tokenToCap2 (fun accessToken _ ->
                 let (AccssTodos user) = accessToken.Data
                 if user.Name = principal.Name then
-                    Cmd.OfAsyncWith.either Async.StartImmediate api.getTodos () succss failure
+                    Cmd.OfAsyncWith.either Async.StartImmediate api.getTodos () success failure
+                else
+                    Cmd.none
+            )
+        let getTodosOnlyForUser2 (principal:User) =
+            let accessToken : AccessToken<AccssTodos> option = Authorization.todosAccssForUser principal
+            accessToken
+            |> tokenToCap2 (fun accessToken _ ->
+                let (AccssTodos user) = accessToken.Data
+                if user.Name = principal.Name then
+                    Cmd.OfAsyncWith.either Async.StartImmediate api.getTodos () GotTodos GotTodosError
                 else
                     Cmd.none
             )
 
         // create the record that contains the capabilities
         {
-            getTodos = getTodosOnlyForUser //User -> option<GetTodosCap>
-            getTodos2 = getTodosOnlyForUser //User -> option<GetTodosCap>
+            getTodos = getTodosOnlyForUser
+            getTodos2 = getTodosOnlyForUser2
         } : IUICapabilityProvider
 
-    let mainPageCaps success failure principal =
+    let mainPageCaps principal =
         {|
-            getTodos1 = (allCapabilities success failure).getTodos principal
-            getTodos2 = (allCapabilities success failure).getTodos2 principal
+            getTodos1 = (allCapabilities).getTodos principal
+            getTodos2 = (allCapabilities).getTodos2 principal
         |}
 
 // let inline square (x: ^a when ^a: (static member (*): ^a -> ^a -> ^a)) = x * x

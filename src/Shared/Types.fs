@@ -10,14 +10,15 @@ module Types =
     // type TryValue<'a,'b> =
     //     | Value of 'a
     //     | Error of 'b
-    type Msg<'a, 'b> =
+    type Msg =
         | Login of string * string
         | GetTodos
-        | GotTodos of 'a // this would actually be when server
-        | GotTodosError of 'b
+        | GotTodos of string list // this would actually be when server
+        | GotTodosError of exn
         | SelectCustomer of User * string
         | Logout
-    type FailureCase = 
+
+    type FailureCase =
         | AuthenticationFailed of string
         | AuthorizationFailed
         | CustomerNameNotFound of string
