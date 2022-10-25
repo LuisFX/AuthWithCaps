@@ -13,8 +13,8 @@ open Fable
 open Fable.Remoting.Client
 
 type Authenticated =
-    | LoggedIn of User
-    | CustomerSelected of User * CustomerId * string list option
+    | LoggedIn of UserPrincipal
+    | CustomerSelected of UserPrincipal * CustomerId * string list option
 
 type State<'PageCapsOpts> =
     | LoggedOut

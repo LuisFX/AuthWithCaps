@@ -2,7 +2,7 @@ namespace Shared
 
 module Types =
 
-    type User = { Name: string; Roles: string[] }
+    type UserPrincipal = { Name: string; Roles: string[] }
     type CustomerId = CustomerId of int
     type CustomerData = CustomerData of string
     type Password = Password of string
@@ -15,7 +15,7 @@ module Types =
         | GetTodos
         | GotTodos of string list // this would actually be when server
         | GotTodosError of exn
-        | SelectCustomer of User * string
+        | SelectCustomer of UserPrincipal * string
         | Logout
 
     type FailureCase =

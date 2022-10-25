@@ -50,7 +50,7 @@ module Capabilities =
             |> Option.map (fun token ->
                 fun x -> f token x)
 
-        let getCustomerOnlyForSameId id (principal:User)  =
+        let getCustomerOnlyForSameId id principal  =
             let accessToken = Authorization.onlyForSameId id principal
             // MAXIME: The code below would fail to compile, because the AccessToken is of a different type, as expected.
             // match accessToken with
@@ -59,13 +59,13 @@ module Capabilities =
             // | None -> None
             accessToken |> tokenToCap CustomerDatastore.getCustomer
 
-        let getCustomerOnlyForAgentsInBusinessHours id (principal:User) =
+        let getCustomerOnlyForAgentsInBusinessHours id principal =
             let accessToken = Authorization.onlyForAgents id principal
             let cap1 = accessToken |> tokenToCap CustomerDatastore.getCustomer
             let restriction f = Authorization.onlyIfDuringBusinessHours (DateTime.Now) f
             cap1 |> Authorization.restrict restriction
 
-        let getCustomerOnlyForSameId_OrForAgentsInBusinessHours id (principal:User) =
+        let getCustomerOnlyForSameId_OrForAgentsInBusinessHours id principal =
             async {
                 let cap1 = getCustomerOnlyForSameId id principal
                 let cap2 = getCustomerOnlyForAgentsInBusinessHours id principal
@@ -74,7 +74,7 @@ module Capabilities =
 
         let updateCustomerOnlyForSameId id principal =
             async {
-                let accessToken = Authorization.onlyForSameId id (principal:User)
+                let accessToken = Authorization.onlyForSameId id principal
                 return accessToken |> tokenToCap2 CustomerDatastore.updateCustomer
             }
 
@@ -88,14 +88,14 @@ module Capabilities =
                 return cap1 |> Authorization.restrict restriction
             }
 
-        let updateCustomerOnlyForSameId_OrForAgentsInBusinessHours id (principal:User) =
+        let updateCustomerOnlyForSameId_OrForAgentsInBusinessHours id principal =
             async {
                 let! cap1 = updateCustomerOnlyForSameId id principal
                 let! cap2 = updateCustomerOnlyForAgentsInBusinessHours id principal
                 return Authorization.first [cap1; cap2]
             }
 
-        let updatePasswordOnlyForSameId id (principal:User) =
+        let updatePasswordOnlyForSameId id principal =
             async {
                 let accessToken = Authorization.passwordUpdate id principal
                 let cap = accessToken |> tokenToCap2 CustomerDatastore.updatePassword
@@ -104,7 +104,7 @@ module Capabilities =
                     |> Option.map (Authorization.auditable "UpdatePassword" principal.Name)
             }
 
-        let getTodosOnlyForUser principal : Async<option<('a -> Result<list<string>,FailureCase>)>> =
+        let getTodosOnlyForUser principal = //: Async<option<('a -> Result<list<string>,FailureCase>)>> =
             async {
 
                 let accessToken = Authorization.todosAccssForUser principal

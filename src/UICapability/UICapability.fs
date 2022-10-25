@@ -16,7 +16,7 @@ module Capabilities =
         |> Remoting.buildProxy<Capabilities.IApiCapabilityProvider>
 
     let allCapabilities  =
-        let getTodosOnlyForUser (principal:User) (success:string list -> Msg) (failure:exn -> Msg) =
+        let getTodosOnlyForUser principal (success:string list -> Msg) (failure:exn -> Msg) =
             let accessToken : AccessToken<AccssTodos> option = Authorization.todosAccssForUser principal
             accessToken
             |> tokenToCap2 (fun accessToken _ ->
@@ -26,7 +26,7 @@ module Capabilities =
                 else
                     Cmd.none
             )
-        let getTodosOnlyForUser2 (principal:User) =
+        let getTodosOnlyForUser2 principal =
             let accessToken : AccessToken<AccssTodos> option = Authorization.todosAccssForUser principal
             accessToken
             |> tokenToCap2 (fun accessToken _ ->
