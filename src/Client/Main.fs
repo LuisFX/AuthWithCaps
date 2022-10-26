@@ -46,11 +46,15 @@ let update msg state =
     | Authenticated (a, pageCapsOpt) ->
         match msg with
         | GetTodos ->
+            let principal, userId =
+                match a with
+                | LoggedIn u -> failwith "Not Implemented"
+                | UserSelected (principal, userId, todos ) -> principal, userId
             let cmd =
                 match pageCapsOpt with
                 | Some pageCaps ->
                     match pageCaps.TodosCap1 with
-                    | Some cap -> cap()  //This is hard to read, because it hides the messages that will be called upon success or failure
+                    | Some cap -> cap userId  //This is hard to read, because it hides the messages that will be called upon success or failure
                     | None -> Cmd.none
                 | None -> Cmd.none
             state, cmd
@@ -72,7 +76,7 @@ let update msg state =
                 let getTodosWired1 = pageCaps.getTodos1 GotTodos GotTodosError
                 let getTodosWired2 = pageCaps.getTodos2
 
-                let pageCapsOpts = Some { TodosCap1 = getTodosWired1; TodosCap2 = getTodosWired2 }
+                let pageCapsOpts = Some { TodosCap1 = getTodosWired1; TodosCap2 = getTodosWired1 }
                 let userSelected = UserSelected( principal, userId, None )
                 // val CapsOpts : option<{| getTodos1: option<FetchTodoCap>; getTodos2: option<FetchTodoCap> |}>
                 // val newState : State<{| getTodos1: option<FetchTodoCap>; getTodos2: option<FetchTodoCap> |}>

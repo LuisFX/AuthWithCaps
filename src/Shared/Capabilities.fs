@@ -15,7 +15,7 @@ module Capabilities =
     type UpdateCustomerCap = UserData -> Result<unit,FailureCase>
     type UpdatePasswordCap = Password -> Result<unit,FailureCase>
     type GetTodosCap = unit -> Result<Todo list,FailureCase>
-    type FetchTodoCap = unit -> Cmd<Msg>
+    type FetchTodoCap = UserId -> Cmd<Msg>
 
     // type GetClientTodosCap = unit -> Result<CustomerData,FailureCase>
 
@@ -40,11 +40,12 @@ module Capabilities =
 
     type IUICapabilityProvider = {
         getTodos: UserId -> UserPrincipal -> (Todo list -> Msg) -> (exn -> Msg) -> FetchTodoCap option
-        getTodos2: UserId -> UserPrincipal -> FetchTodoCap option
+        getTodos2: UserId -> UserPrincipal -> (Todo list -> Msg) -> (exn -> Msg) -> FetchTodoCap option
+        // getTodos2: UserId -> UserPrincipal -> FetchTodoCap option
     }
 
     type IApiCapabilityProvider = {
-        getTodos: unit -> Async<Todo list>
+        getTodos: UserId -> Async<Todo list>
     }
 
     // apply the token, if present,

@@ -31,13 +31,13 @@ open Shared
 
 let todosApi =
     {
-        getTodos = fun _ ->
+        getTodos = fun userId ->
             let u = {
                 Name = "user1"
                 Roles = [| "admin" |]
             }
             async {
-                let! a = Capabilities.allCapabilities.getTodos (UserId 2) u
+                let! a = Capabilities.allCapabilities.getTodos userId u
                 match a with
                 | Some cap ->
                     match cap() with

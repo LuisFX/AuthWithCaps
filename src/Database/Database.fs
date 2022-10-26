@@ -72,7 +72,6 @@ module CustomerDatastore =
 module TodoDataStore =
     let getTodos (accessToken:AccessToken<AccssTodos>) =
         let (AccssTodos user) = accessToken.Data
-        // if user = principal then
         match Store.db.TryGetValue user with
         | true, value -> Ok value.Todos
         | false, _ -> Error ( NotAllowedToGetTodos)
