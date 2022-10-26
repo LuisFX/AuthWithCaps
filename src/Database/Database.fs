@@ -68,9 +68,9 @@ module CustomerDatastore =
         Ok()   // dummy implementation
 
 module TodoDataStore =
-    let getTodos (accessToken:AccessToken<AccssTodos>) principal =
+    let getTodos (accessToken:AccessToken<AccssTodos>) =
         let (AccssTodos user) = accessToken.Data
-        if user = user then
-            Ok ["one"; "two"; "three"]
-        else
-            Error NotAllowedToGetTodos
+        // if user = principal then
+        Ok ["one"; "two"; "three"]
+        // else
+        //     Error NotAllowedToGetTodos

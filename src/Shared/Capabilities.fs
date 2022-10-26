@@ -8,7 +8,7 @@ module Capabilities =
     // each access token gets its own type
     type AccessCustomer = AccessCustomer of UserId
     type UpdatePassword = UpdatePassword of UserId
-    type AccssTodos = AccssTodos of UserPrincipal
+    type AccssTodos = AccssTodos of UserId
 
     // capabilities
     type GetCustomerCap = unit -> Result<UserData,FailureCase>
@@ -35,12 +35,12 @@ module Capabilities =
         /// given a customerId and User, attempt to get the UpdatePassword capability
         updatePassword : UserId -> UserPrincipal -> Async<UpdatePasswordCap option>
         /// get all todos for the given user
-        getTodos : UserPrincipal -> Async<GetTodosCap option>
+        getTodos : UserId -> UserPrincipal -> Async<GetTodosCap option>
     }
 
     type IUICapabilityProvider = {
-        getTodos: UserPrincipal -> (string list -> Msg) -> (exn -> Msg) -> FetchTodoCap option
-        getTodos2: UserPrincipal -> FetchTodoCap option
+        getTodos: UserId -> UserPrincipal -> (string list -> Msg) -> (exn -> Msg) -> FetchTodoCap option
+        getTodos2: UserId -> UserPrincipal -> FetchTodoCap option
     }
 
     type IApiCapabilityProvider = {

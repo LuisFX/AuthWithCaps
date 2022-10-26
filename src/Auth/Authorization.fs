@@ -35,9 +35,9 @@ module Authorization =
         else
             None
 
-    let todosAccssForUser principal =
-        if Authentication.userIsOwnedByPrincipal principal then
-            Some {data=AccssTodos principal}
+    let todosAccssForUser id (principal:UserPrincipal) =
+        if Authentication.userIsOwnedByPrincipal id principal then
+            Some {data=AccssTodos id}
         else
             None
 

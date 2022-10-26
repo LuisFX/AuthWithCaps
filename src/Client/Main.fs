@@ -12,13 +12,18 @@ open Shared
 open Fable
 open Fable.Remoting.Client
 
-type Authenticated =
+type PageCaps = {
+    TodosCap1: FetchTodoCap option
+    TodosCap2: FetchTodoCap option
+}
+
+type Authenticated2 =
     | LoggedIn of UserPrincipal
     | UserSelected of UserPrincipal * UserId * string list option
 
-type State<'PageCapsOpts> =
+type State =
     | LoggedOut
-    | Authenticated of Authenticated * 'PageCapsOpts
+    | Authenticated of Authenticated2 * PageCaps option
 
 let init() = LoggedOut, Cmd.none
 
@@ -29,27 +34,24 @@ let update msg state =
         | Login (u,p) ->
             match Authentication.authenticate u with
             | Ok principal ->
-                let pageCaps = (UICapability.Capabilities.mainPageCaps principal)
-                let getTodosWired1 = pageCaps.getTodos1 GotTodos GotTodosError
-                let getTodosWired2 = pageCaps.getTodos2
-
-                let pageCapsOpts = {| getTodos1 = getTodosWired1; getTodos2 = getTodosWired2 |}
-
                 let newState = Authenticated (
                     LoggedIn principal,
-                    pageCapsOpts
+                    None
                 )
                 newState, Cmd.none
             | Error err ->
                 printfn ".. %A" err
                 state, Cmd.none
         | _ -> state, Cmd.none
-    | Authenticated (a, pageCaps) ->
+    | Authenticated (a, pageCapsOpt) ->
         match msg with
         | GetTodos ->
             let cmd =
-                match pageCaps.getTodos1 with
-                | Some cap -> cap()  //This is hard to read, because it hides the messages that will be called upon success or failure
+                match pageCapsOpt with
+                | Some pageCaps ->
+                    match pageCaps.TodosCap1 with
+                    | Some cap -> cap()  //This is hard to read, because it hides the messages that will be called upon success or failure
+                    | None -> Cmd.none
                 | None -> Cmd.none
             state, cmd
         | Login(_, _) -> failwith "Not Implemented"
@@ -57,8 +59,8 @@ let update msg state =
             let principal, userId =
                 match a with
                 | LoggedIn u -> failwith "Not Implemented"
-                | UserSelected (principal, userId, todos) -> principal, userId
-            let state = Authenticated( UserSelected(principal, userId, Some todos), pageCaps )
+                | UserSelected (principal, userId, todos ) -> principal, userId
+            let state = Authenticated (UserSelected(principal, userId, Some todos), None)
             state, Cmd.none
 
         | GotTodosError(_) -> failwith "Error getting To-Do's"
@@ -66,8 +68,17 @@ let update msg state =
             match Authentication.userIdForName userName with
             | Ok userId ->
                 // found -- change state
-                let state = Authenticated( UserSelected(principal, userId, None), pageCaps )
-                state, Cmd.none
+                let pageCaps = (UICapability.Capabilities.mainPageCaps userId principal)
+                let getTodosWired1 = pageCaps.getTodos1 GotTodos GotTodosError
+                let getTodosWired2 = pageCaps.getTodos2
+
+                let pageCapsOpts = Some { TodosCap1 = getTodosWired1; TodosCap2 = getTodosWired2 }
+                let userSelected = UserSelected( principal, userId, None )
+                // val CapsOpts : option<{| getTodos1: option<FetchTodoCap>; getTodos2: option<FetchTodoCap> |}>
+                // val newState : State<{| getTodos1: option<FetchTodoCap>; getTodos2: option<FetchTodoCap> |}>
+                let newState:State = Authenticated( UserSelected( principal, userId, None ), pageCapsOpts )
+
+                newState, Cmd.none
             | Error err ->
                 // not found -- stay in originalState
                 printfn ".. %A" err
@@ -127,11 +138,14 @@ let App() =
                 prop.onClick (fun _ -> Logout |> dispatch)
             ]
         ]
-    | Authenticated ( (UserSelected (principal, customerId, todos )), pageCaps ) -> //CustomerSelected (principal, customerId) ->
+    | Authenticated ( (UserSelected (principal, customerId, todos )), pageCapsOpt ) -> //CustomerSelected (principal, customerId) ->
         // get the text for menu options based on capabilities that are present
         let menuOptionActions =
             [
-                getTodosUI pageCaps.getTodos1 principal dispatch
+                match pageCapsOpt with
+                | Some pageCaps ->
+                    getTodosUI pageCaps.TodosCap1 principal dispatch
+                | None -> None
             ]
             |> List.choose id
         let todosUi =

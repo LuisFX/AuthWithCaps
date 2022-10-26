@@ -104,11 +104,11 @@ module Capabilities =
                     |> Option.map (Authorization.auditable "UpdatePassword" principal.Name)
             }
 
-        let getTodosOnlyForUser principal = //: Async<option<('a -> Result<list<string>,FailureCase>)>> =
+        let getTodosOnlyForUser id principal = //: Async<option<('a -> Result<list<string>,FailureCase>)>> =
             async {
 
-                let accessToken = Authorization.todosAccssForUser principal
-                let cap = accessToken |> tokenToCap2 TodoDataStore.getTodos
+                let accessToken = Authorization.todosAccssForUser id principal
+                let cap = accessToken |> tokenToCap TodoDataStore.getTodos
                 return cap // |> Option.map (Authorization.auditable "GetTodos" principal.Name)
             }
 
@@ -121,9 +121,9 @@ module Capabilities =
             getTodos = getTodosOnlyForUser //Get todos for user, for SAME CUSTOMER ID
         } : ICapabilityProvider
 
-    let getAllCapabilities customerId principal =
-        let getCustomer = allCapabilities.getCustomer customerId principal
-        let updateCustomer = allCapabilities.updateCustomer customerId principal
-        let updatePassword = allCapabilities.updatePassword customerId principal
-        let getTodos = allCapabilities.getTodos principal
+    let getAllCapabilities id principal =
+        let getCustomer = allCapabilities.getCustomer id principal
+        let updateCustomer = allCapabilities.updateCustomer id principal
+        let updatePassword = allCapabilities.updatePassword id principal
+        let getTodos = allCapabilities.getTodos id principal
         getCustomer, updateCustomer , updatePassword, getTodos

@@ -30,18 +30,18 @@ open Shared
 //         addTodo (Todo.create "Ship it !!!") |> ignore
 
 let todosApi =
-    { 
+    {
         getTodos = fun _ ->
             let u = {
                 Name = "user1"
                 Roles = [| "admin" |]
             }
             async {
-                let! a = Capabilities.allCapabilities.getTodos u
+                let! a = Capabilities.allCapabilities.getTodos (UserId 2) u
                 match a with
-                | Some cap -> 
+                | Some cap ->
                     match cap() with
-                    | Ok l -> 
+                    | Ok l ->
                         return l
                     | Error err ->
                         return []
