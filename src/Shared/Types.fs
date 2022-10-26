@@ -21,7 +21,7 @@ module Types =
     type Msg =
         | Login of string * string
         | GetTodos
-        | GotTodos of string list // this would actually be when server
+        | GotTodos of Todo list // this would actually be when server
         | GotTodosError of exn
         | SelectUser of UserPrincipal * string
         | Logout

@@ -19,7 +19,7 @@ type PageCaps = {
 
 type Authenticated2 =
     | LoggedIn of UserPrincipal
-    | UserSelected of UserPrincipal * UserId * string list option
+    | UserSelected of UserPrincipal * UserId * Todo list option
 
 type State =
     | LoggedOut
@@ -150,7 +150,7 @@ let App() =
             |> List.choose id
         let todosUi =
             match todos with
-            | Some todos -> Html.ul (todos |> List.map (fun t -> Html.li [ Html.text t ]))
+            | Some todos -> Html.ul (todos |> List.map (fun t -> Html.li [ Html.text t.Description; Html.span "=" ; Html.text (t.Completed.ToString()) ]))
             | None -> null
         Html.div [
             Html.h1 (sprintf "Logged in: %A" principal.Name )
