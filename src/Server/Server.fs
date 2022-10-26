@@ -29,7 +29,7 @@ open Shared
 //         addTodo (Todo.create "Write your app") |> ignore
 //         addTodo (Todo.create "Ship it !!!") |> ignore
 
-let todosApi =
+let serverApi =
     {
         getTodos = fun userId ->
             let u = {

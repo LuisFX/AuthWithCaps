@@ -10,7 +10,7 @@ open Elmish
 module Capabilities =
     open Auth.Authorization
 
-    let api : IApiCapabilityProvider =
+    let clientApi : IApiCapabilityProvider =
         Remoting.createApi ()
         |> Remoting.withRouteBuilder Route.builder
         |> Remoting.buildProxy<Capabilities.IApiCapabilityProvider>
@@ -23,7 +23,7 @@ module Capabilities =
                 |> tokenToCap2 (fun accessToken _ ->
                     let (AccssTodos userId) = accessToken.Data
                     // if userId = principal then
-                    Cmd.OfAsyncWith.either Async.StartImmediate api.getTodos userId success failure
+                    Cmd.OfAsyncWith.either Async.StartImmediate clientApi.getTodos userId success failure
                     // else
                         // Cmd.none
                 )
