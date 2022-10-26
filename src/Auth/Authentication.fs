@@ -38,7 +38,3 @@ module Authentication =
         |> userIdForName
         |> Result.map (fun principalId -> principalId = userId)
         |> orElse false
-
-    let userIsOwnedByPrincipal id principal =
-        //Compare principal.Name against databse
-        true

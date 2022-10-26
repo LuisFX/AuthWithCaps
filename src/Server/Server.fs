@@ -52,7 +52,7 @@ let serverApi =
 let webApp : Giraffe.Core.HttpFunc -> Microsoft.AspNetCore.Http.HttpContext -> Giraffe.Core.HttpFuncResult =
     Remoting.createApi ()
     |> Remoting.withRouteBuilder Route.builder
-    |> Remoting.fromValue todosApi
+    |> Remoting.fromValue serverApi
     |> Remoting.buildHttpHandler
 
 let app =
