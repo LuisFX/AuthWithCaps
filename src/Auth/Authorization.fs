@@ -10,14 +10,14 @@ module Authorization =
         // but do allow read access to the data
         member this.Data = this.data
 
-    let onlyForSameId (id:CustomerId) principal =
-        if Authentication.customerIdOwnedByPrincipal id principal then
+    let onlyForSameId (id:UserId) principal =
+        if Authentication.userIdOwnedByPrincipal id principal then
             Some {data=AccessCustomer id}
         else
             None
 
-    let onlyForAgents (id:CustomerId) principal  =
-        if principal.Roles |> Array.contains Authentication.customerAgentRole then
+    let onlyForAgents id principal  =
+        if principal.Roles |> Array.contains Authentication.adminRole then
             Some {data=AccessCustomer id}
         else
             None
@@ -29,8 +29,8 @@ module Authorization =
             None
 
     // constrain who can call a password update function
-    let passwordUpdate (id:CustomerId) principal =
-        if Authentication.customerIdOwnedByPrincipal id principal then
+    let passwordUpdate id principal =
+        if Authentication.userIdOwnedByPrincipal id principal then
             Some {data=UpdatePassword id}
         else
             None

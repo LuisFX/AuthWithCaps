@@ -6,13 +6,13 @@ module Capabilities =
     open System.Collections.Generic
 
     // each access token gets its own type
-    type AccessCustomer = AccessCustomer of CustomerId
-    type UpdatePassword = UpdatePassword of CustomerId
+    type AccessCustomer = AccessCustomer of UserId
+    type UpdatePassword = UpdatePassword of UserId
     type AccssTodos = AccssTodos of UserPrincipal
 
     // capabilities
-    type GetCustomerCap = unit -> Result<CustomerData,FailureCase>
-    type UpdateCustomerCap = CustomerData -> Result<unit,FailureCase>
+    type GetCustomerCap = unit -> Result<UserData,FailureCase>
+    type UpdateCustomerCap = UserData -> Result<unit,FailureCase>
     type UpdatePasswordCap = Password -> Result<unit,FailureCase>
     type GetTodosCap = unit -> Result<string list,FailureCase>
     type FetchTodoCap = unit -> Cmd<Msg>
@@ -29,11 +29,11 @@ module Capabilities =
 
     type ICapabilityProvider = {
         /// given a customerId and User, attempt to get the GetCustomer capability
-        getCustomer : CustomerId -> UserPrincipal -> Async<GetCustomerCap option>
+        getCustomer : UserId -> UserPrincipal -> Async<GetCustomerCap option>
         /// given a customerId and User, attempt to get the UpdateCustomer capability
-        updateCustomer : CustomerId -> UserPrincipal -> Async<UpdateCustomerCap option>
+        updateCustomer : UserId -> UserPrincipal -> Async<UpdateCustomerCap option>
         /// given a customerId and User, attempt to get the UpdatePassword capability
-        updatePassword : CustomerId -> UserPrincipal -> Async<UpdatePasswordCap option>
+        updatePassword : UserId -> UserPrincipal -> Async<UpdatePasswordCap option>
         /// get all todos for the given user
         getTodos : UserPrincipal -> Async<GetTodosCap option>
     }

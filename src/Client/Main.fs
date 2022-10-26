@@ -14,7 +14,7 @@ open Fable.Remoting.Client
 
 type Authenticated =
     | LoggedIn of UserPrincipal
-    | CustomerSelected of UserPrincipal * CustomerId * string list option
+    | UserSelected of UserPrincipal * UserId * string list option
 
 type State<'PageCapsOpts> =
     | LoggedOut
@@ -54,19 +54,19 @@ let update msg state =
             state, cmd
         | Login(_, _) -> failwith "Not Implemented"
         | GotTodos todos ->
-            let principal, customerId =
+            let principal, userId =
                 match a with
                 | LoggedIn u -> failwith "Not Implemented"
-                | CustomerSelected (principal, customerId, todos) -> principal, customerId
-            let state = Authenticated( CustomerSelected(principal, customerId, Some todos), pageCaps )
+                | UserSelected (principal, userId, todos) -> principal, userId
+            let state = Authenticated( UserSelected(principal, userId, Some todos), pageCaps )
             state, Cmd.none
 
         | GotTodosError(_) -> failwith "Error getting To-Do's"
-        | SelectCustomer(principal, customerName) ->
-            match Authentication.customerIdForName customerName with
-            | Ok customerId ->
+        | SelectUser(principal, userName) ->
+            match Authentication.userIdForName userName with
+            | Ok userId ->
                 // found -- change state
-                let state = Authenticated( CustomerSelected(principal, customerId, None), pageCaps )
+                let state = Authenticated( UserSelected(principal, userId, None), pageCaps )
                 state, Cmd.none
             | Error err ->
                 // not found -- stay in originalState
@@ -109,16 +109,16 @@ let App() =
         Html.div [
             Html.h1 (sprintf "Logged in: %A" principal.Name )
 
-            Html.span "Pick a customer"
+            Html.span "Pick a user"
             Html.br []
             Html.button [
                 prop.text "Luis"
-                prop.onClick (fun _ -> SelectCustomer (principal, "luis") |> dispatch)
+                prop.onClick (fun _ -> SelectUser (principal, "luis") |> dispatch)
             ]
             Html.br []
             Html.button [
                 prop.text "maxime"
-                prop.onClick (fun _ ->  SelectCustomer (principal, "maxime") |> dispatch)
+                prop.onClick (fun _ ->  SelectUser (principal, "maxime") |> dispatch)
             ]
             Html.br []
             Html.br []
@@ -127,7 +127,7 @@ let App() =
                 prop.onClick (fun _ -> Logout |> dispatch)
             ]
         ]
-    | Authenticated ( (CustomerSelected (principal, customerId, todos )), pageCaps ) -> //CustomerSelected (principal, customerId) ->
+    | Authenticated ( (UserSelected (principal, customerId, todos )), pageCaps ) -> //CustomerSelected (principal, customerId) ->
         // get the text for menu options based on capabilities that are present
         let menuOptionActions =
             [
