@@ -54,7 +54,9 @@ let update msg state =
                 match pageCapsOpt with
                 | Some pageCaps ->
                     match pageCaps.TodosCap1 with
-                    | Some cap -> cap userId  //This is hard to read, because it hides the messages that will be called upon success or failure
+                    | Some cap ->
+                        Cmd.OfAsyncWith.either Async.StartImmediate cap () GotTodos GotTodosError
+                        // cap userId  //This is hard to read, because it hides the messages that will be called upon success or failure
                     | None -> Cmd.none
                 | None -> Cmd.none
             state, cmd
@@ -73,7 +75,7 @@ let update msg state =
             | Ok userId ->
                 // found -- change state
                 let pageCaps = (UICapability.Capabilities.mainPageCaps userId principal)
-                let getTodosWired1 = pageCaps.getTodos1 GotTodos GotTodosError
+                let getTodosWired1 = pageCaps.getTodos1
                 let getTodosWired2 = pageCaps.getTodos2
 
                 let pageCapsOpts = Some { TodosCap1 = getTodosWired1; TodosCap2 = getTodosWired1 }

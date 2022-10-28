@@ -16,14 +16,14 @@ module Capabilities =
         |> Remoting.buildProxy<Capabilities.IApiCapabilityProvider>
 
     let allCapabilities  =
-        let getTodosOnlyForUser (id:UserId) (principal:UserPrincipal) (success:Todo list -> Msg) (failure:exn -> Msg) =
+        let getTodosOnlyForUser (id:UserId) (principal:UserPrincipal) =
             let accessToken : AccessToken<AccssTodos> option = Authorization.todosAccssForUser id principal
             if Authentication.userIdOwnedByPrincipal id principal then
                 accessToken
-                |> tokenToCap2 (fun accessToken _ ->
+                |> tokenToCap2 (fun accessToken ->
                     let (AccssTodos userId) = accessToken.Data
                     // if userId = principal then
-                    Cmd.OfAsyncWith.either Async.StartImmediate clientApi.getTodos userId success failure
+                    clientApi.getTodos
                     // else
                         // Cmd.none
                 )
