@@ -15,17 +15,6 @@ module Types =
     }
     type Password = Password of string
 
-    // type TryValue<'a,'b> =
-    //     | Value of 'a
-    //     | Error of 'b
-    type Msg =
-        | Login of string * string
-        | GetTodos
-        | GotTodos of Todo list // this would actually be when server
-        | GotTodosError of exn
-        | SelectUser of UserPrincipal * string
-        | Logout
-
     type FailureCase =
         | AuthenticationFailed of string
         | AuthorizationFailed

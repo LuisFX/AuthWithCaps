@@ -8,7 +8,6 @@
         <None Include="index.html" />
         <None Include="paket.references" />
         <!-- <Compile Include="Index.fs" /> -->
-        <Compile Include="App.fs" />
         <Compile Include="Main.fs" />
     </ItemGroup>
     <ItemGroup>

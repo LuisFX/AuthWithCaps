@@ -17,6 +17,14 @@ type PageCaps = {
     TodosCap2: FetchTodoCap option
 }
 
+type Msg =
+    | Login of string * string
+    | GetTodos
+    | GotTodos of Todo list // this would actually be when server
+    | GotTodosError of exn
+    | SelectUser of UserPrincipal * string
+    | Logout
+
 type Authenticated2 =
     | LoggedIn of UserPrincipal
     | UserSelected of UserPrincipal * UserId * Todo list option
@@ -79,9 +87,6 @@ let update msg state =
                 let getTodosWired2 = pageCaps.getTodos2
 
                 let pageCapsOpts = Some { TodosCap1 = getTodosWired1; TodosCap2 = getTodosWired1 }
-                let userSelected = UserSelected( principal, userId, None )
-                // val CapsOpts : option<{| getTodos1: option<FetchTodoCap>; getTodos2: option<FetchTodoCap> |}>
-                // val newState : State<{| getTodos1: option<FetchTodoCap>; getTodos2: option<FetchTodoCap> |}>
                 let newState:State = Authenticated( UserSelected( principal, userId, None ), pageCapsOpts )
 
                 newState, Cmd.none

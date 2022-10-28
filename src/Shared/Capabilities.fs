@@ -17,15 +17,6 @@ module Capabilities =
     type GetTodosCap = unit -> Result<Todo list,FailureCase>
     type FetchTodoCap = unit -> Async<Todo list>
 
-    // type GetClientTodosCap = unit -> Result<CustomerData,FailureCase>
-
-    // type IClientCapabilityProvider = {
-    //     // getCustomer: AccessCustomer -> GetCustomerCap
-    //     // updateCustomer: AccessCustomer -> UpdateCustomerCap
-    //     // updatePassword: UpdatePassword -> UpdatePasswordCap
-    //     getTodos: unit -> Async<GetClientTodosCap>
-    //     // unit -> Async<Todo list>
-    // }
 
     type ICapabilityProvider = {
         /// given a customerId and User, attempt to get the GetCustomer capability
