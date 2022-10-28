@@ -23,6 +23,7 @@ type Msg =
     | GotTodos of Todo list // this would actually be when server
     | GotTodosError of exn
     | SelectUser of UserPrincipal * string
+    | DeselectUser
     | Logout
 
 type Authenticated2 =
@@ -35,49 +36,27 @@ type State =
 
 let init() = LoggedOut, Cmd.none
 
+let loginCmd state u =
+    match Authentication.authenticate u with
+    | Ok principal ->
+        let newState = Authenticated (
+            LoggedIn principal,
+            None
+        )
+        newState, Cmd.none
+    | Error err ->
+        printfn ".. %A" err
+        state, Cmd.none
+
 let update msg state =
     match state with
     | LoggedOut ->
         match msg with
         | Login (u,p) ->
-            match Authentication.authenticate u with
-            | Ok principal ->
-                let newState = Authenticated (
-                    LoggedIn principal,
-                    None
-                )
-                newState, Cmd.none
-            | Error err ->
-                printfn ".. %A" err
-                state, Cmd.none
+           loginCmd state u
         | _ -> state, Cmd.none
-    | Authenticated (a, pageCapsOpt) ->
+    | Authenticated( LoggedIn (p), pageCaps) ->
         match msg with
-        | GetTodos ->
-            let principal, userId =
-                match a with
-                | LoggedIn u -> failwith "Not Implemented"
-                | UserSelected (principal, userId, todos ) -> principal, userId
-            let cmd =
-                match pageCapsOpt with
-                | Some pageCaps ->
-                    match pageCaps.TodosCap1 with
-                    | Some cap ->
-                        Cmd.OfAsyncWith.either Async.StartImmediate cap () GotTodos GotTodosError
-                        // cap userId  //This is hard to read, because it hides the messages that will be called upon success or failure
-                    | None -> Cmd.none
-                | None -> Cmd.none
-            state, cmd
-        | Login(_, _) -> failwith "Not Implemented"
-        | GotTodos todos ->
-            let principal, userId =
-                match a with
-                | LoggedIn u -> failwith "Not Implemented"
-                | UserSelected (principal, userId, todos ) -> principal, userId
-            let state = Authenticated (UserSelected(principal, userId, Some todos), None)
-            state, Cmd.none
-
-        | GotTodosError(_) -> failwith "Error getting To-Do's"
         | SelectUser(principal, userName) ->
             match Authentication.userIdForName userName with
             | Ok userId ->
@@ -94,7 +73,27 @@ let update msg state =
                 // not found -- stay in originalState
                 printfn ".. %A" err
                 state, Cmd.none
+    | Authenticated(Item1 = UserSelected(principal, userId, todos); Item2 = pageCapsOpt;) ->
+        match msg with
+        | DeselectUser ->
+            Authenticated (LoggedIn(principal), pageCapsOpt), Cmd.none
+        | GetTodos ->
+            let cmd =
+                match pageCapsOpt with
+                | Some pageCaps ->
+                    match pageCaps.TodosCap1 with
+                    | Some cap ->
+                        Cmd.OfAsyncWith.either Async.StartImmediate cap () GotTodos GotTodosError
+                    | None -> Cmd.none
+                | None -> Cmd.none
+            state, cmd
+        | GotTodos todos ->
+            let state = Authenticated (UserSelected(principal, userId, Some todos), None)
+            state, Cmd.none
+
+        | GotTodosError(_) -> failwith "Error getting To-Do's"
         | Logout -> failwith "Not Implemented"
+        | Login(_, _) -> failwith "Not Implemented"
 
 let getTodosUI getTodosCap principal dispatch =
     getTodosCap
@@ -172,7 +171,7 @@ let App() =
             Html.br []
             Html.button [
                 prop.text "Deselect Customer"
-                prop.onClick (fun _ -> Login (principal.Name, "") |> dispatch)
+                prop.onClick (fun _ -> DeselectUser |> dispatch)
             ]
             Html.button [
                 prop.text "Logout"
